@@ -156,7 +156,7 @@ int main() {
     // build and compile shaders
     // -------------------------
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
-    Shader skyboxShader("resources/shaders/skyBox.vs", "resources/shaders/skyBox.fs");
+    Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     // load models
     // -----------
     Model ourModel("resources/objects/backpack/backpack.obj");
@@ -265,6 +265,25 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
+        ourShader.setVec3("viewPosition",programState->camera.Position);
+        ourShader.setFloat("material.shininess",30.0);
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = programState->camera.GetViewMatrix();
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view);
+
+
+        //dirLight
+        ourShader.setVec3("dirLight.direction", -0.1f, -1.0f, -0.1f);
+        ourShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
+        ourShader.setVec3("dirLight.diffuse", 0.05f, 0.05f, 0.05);
+        ourShader.setVec3("dirLight.specular", 0.2f, 0.2f, 0.2f);
+
+
+
+
         pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
@@ -276,11 +295,7 @@ int main() {
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = programState->camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
