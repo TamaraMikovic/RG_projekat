@@ -25,8 +25,8 @@ unsigned int loadTexture(const char *path);
 unsigned int loadCubeMap(vector<std::string> faces);
 
 // settings
-const unsigned int SCR_WIDTH = 1200;
-const unsigned int SCR_HEIGHT = 900;
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 600;
 
 // camera
 float lastX = SCR_WIDTH / 2.0f;
@@ -315,9 +315,9 @@ int main() {
         skyboxShader.setInt("skybox", 0);
 
         glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        glDepthFunc(GL_LEQUAL);
         skyboxShader.use();
-        view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
+        view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix()));
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
 
@@ -426,7 +426,7 @@ void DrawImGui(ProgramState *programState) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
