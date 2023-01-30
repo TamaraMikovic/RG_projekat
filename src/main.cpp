@@ -162,7 +162,6 @@ int main() {
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
 
@@ -181,6 +180,19 @@ int main() {
     pointLight.quadratic = 0.032f;
 
     //postavljamo vertexe
+
+    //ravan
+    float ravanVertices[] = {
+            100.0f,  0.0f, -100.0f, 0.0f, 1.0f, 0.0f,   100.0f, 100.0f, // top right
+            100.0f, 0.0f, 100.0f, 0.0f, 1.0f, 0.0f,  100.0f, 0.0f, // bottom right
+            -100.0f, 0.0f, 100.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left
+            -100.0f,  0.0f, -100.0f, 0.0f, 1.0f, 0.0f,  0.0f, 100.0f  // top left
+    };
+    unsigned int ravanIndices[] = {
+            0, 1, 3, // first triangle
+            1, 2, 3  // second triangle
+    };
+
     //skybox
     float skyboxVertices[] = {
             // positions
@@ -226,6 +238,29 @@ int main() {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f
     };
+    //ravan VAO
+    unsigned int ravanVBO, ravanVAO, ravanEBO;
+    glGenVertexArrays(1, &ravanVAO);
+    glGenBuffers(1, &ravanVBO);
+    glGenBuffers(1, &ravanEBO);
+    glBindVertexArray(ravanVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, ravanVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ravanVertices), ravanVertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ravanEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ravanIndices), ravanIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand.jpg").c_str());
+    unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/Black.jpg").c_str());
+
 
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -249,6 +284,7 @@ int main() {
 
     unsigned int cubeMapTexture = loadCubeMap(faces);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // render loop
     while (!glfwWindowShouldClose(window)) {
@@ -309,6 +345,21 @@ int main() {
         model = glm::scale(model, glm::vec3(programState->tempScale));
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
+
+        //ravan
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+
+        model = glm::mat4(1.0f);
+        ourShader.setMat4("model", model);
+        ourShader.setMat4("view", view);
+
+        glBindVertexArray(ravanVAO);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
         //object rendering end, start of skybox rendering
         skyboxShader.use();
@@ -458,5 +509,38 @@ unsigned int loadCubeMap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+    return textureID;
+}
+unsigned int loadTexture(char const * path)
+{
+
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
     return textureID;
 }
