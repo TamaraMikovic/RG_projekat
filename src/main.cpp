@@ -138,6 +138,9 @@ int main() {
     }
 
     glEnable(GL_DEPTH_TEST);
+    //Face culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     // tell stb_image.h to flip loaded textures on the y-axis (before loading model).
     stbi_set_flip_vertically_on_load(true);
@@ -157,7 +160,7 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
@@ -347,6 +350,9 @@ int main() {
         ourModel.Draw(ourShader);
 
         //ravan
+
+        glDisable(GL_CULL_FACE);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         glActiveTexture(GL_TEXTURE1);
@@ -359,7 +365,7 @@ int main() {
         glBindVertexArray(ravanVAO);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+        glEnable(GL_CULL_FACE);
 
         //object rendering end, start of skybox rendering
         skyboxShader.use();
