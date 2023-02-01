@@ -299,7 +299,10 @@ int main() {
 
         // directional light
         ourShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        ourShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
+        if(programState->spotlight)
+            ourShader.setVec3("dirLight.ambient", 0.5f, 0.5f, 0.5f);
+        else
+            ourShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
         ourShader.setVec3("dirLight.diffuse", 0.05f, 0.05f, 0.05);
         ourShader.setVec3("dirLight.specular", 0.2f, 0.2f, 0.2f);
 
@@ -307,14 +310,9 @@ int main() {
         ourShader.setVec3("svetlo.position", programState->camera.Position);
         ourShader.setVec3("svetlo.direction", programState->camera.Front);
         ourShader.setVec3("svetlo.ambient", 0.0f, 0.0f, 0.0f);
-        if(programState->spotlight) {
-            ourShader.setVec3("svetlo.diffuse", 1.0f, 1.0f, 1.0f);
-            ourShader.setVec3("svetlo.specular", 1.0f, 1.0f, 1.0f);
-        }
-        else {
-            ourShader.setVec3("svetlo.diffuse", 0.0f, 0.0f, 0.0f);
-            ourShader.setVec3("svetlo.specular", 0.0f, 0.0f, 0.0f);
-        }
+        ourShader.setVec3("svetlo.diffuse", 0.0f, 0.0f, 0.0f);
+        ourShader.setVec3("svetlo.specular", 0.0f, 0.0f, 0.0f);
+
         ourShader.setFloat("svetlo.constant", 1.0f);
         ourShader.setFloat("svetlo.linear", 0.09f);
         ourShader.setFloat("svetlo.quadratic", 0.032f);
@@ -392,6 +390,14 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+        if(programState->spotlight==true)
+            programState->spotlight = false;
+        else
+            programState->spotlight = true;
+    }
+
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -429,8 +435,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
         programState->camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
+
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     programState->camera.ProcessMouseScroll(yoffset);
 }
@@ -451,7 +456,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     // reset the camera to default position
     if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         programState->camera.Position = glm::vec3(0.0f, 0.0f, 3.0f);
-        programState->camera.Yaw = -90.0f;
+        programState->camera.Yaw = 0.0f;
         programState->camera.Pitch = 0.0f;
         programState->camera.Front = glm::vec3(0.0f, 0.0f, -1.0f);
     }
