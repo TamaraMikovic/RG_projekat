@@ -99,6 +99,8 @@ ProgramState *programState;
 
 
 void DrawImGui(ProgramState *programState);
+unsigned int loadCubeMap(vector<std::string> faces);
+void renderCube();
 
 int main() {
     // glfw: initialize and configure
@@ -165,7 +167,7 @@ int main() {
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader mapShader("resources/shaders/cubemap.vs", "resources/shaders/cubemap.fs", );
+    Shader mapShader("resources/shaders/cubemap.vs", "resources/shaders/cubemap.fs");
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
 
@@ -306,7 +308,7 @@ int main() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthCubeMap, 0);
-    // u ovaj framebuffer necemo da renderujemo boju, jer ce da cuva samo dubinu fragmenata
+
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -314,7 +316,6 @@ int main() {
     ourShader.use();
     ourShader.setInt("material.texture_diffuse1", 0);
     ourShader.setInt("material.texture_specular1", 1);
-    ourShader.setInt("depthMap", 2);
 
     glm::vec3 lightPos(-5.0f, 4.0f, -5.0f);
     glm::mat4 model = glm::mat4(1.0f);
