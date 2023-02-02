@@ -154,7 +154,8 @@ int main() {
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader mapShader("resources/shaders/cubemap.vs", "resources/shaders/cubemap.fs");
+    Shader gBuffer("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
+
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
