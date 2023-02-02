@@ -15,7 +15,7 @@
 #include <learnopengl/model.h>
 
 #include <iostream>
-
+#include <ctime>
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
@@ -23,7 +23,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubeMap(vector<std::string> faces);
-void renderCube();
+
+int randRange(int low,int high);
+
 
 // settings
 const unsigned int SCR_WIDTH = 1000;
@@ -156,6 +158,9 @@ int main() {
     Model ourModel("resources/objects/backpack/backpack.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
 
+    Model rock("resources/objects/Rock1/Rock1.obj");
+    rock.SetShaderTextureNamePrefix("material.");
+
     //postavljamo vertexe
 
     //ravan
@@ -268,6 +273,13 @@ int main() {
     glm::vec3 lightPos(-5.0f, 4.0f, -5.0f);
     glm::mat4 model = glm::mat4(1.0f);
 
+    int randArrayX[50];
+    for(int i=0;i<50;i++)
+        randArrayX[i]= randRange(-50,50);
+    int randArrayY[50];
+    for(int i=0;i<50;i++)
+        randArrayY[i]= randRange(-50,50);
+
     // render loop
     while (!glfwWindowShouldClose(window)) {
         // per-frame time logic
@@ -325,6 +337,20 @@ int main() {
         model = glm::scale(model, glm::vec3(programState->tempScale));
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
+
+        //Renderovanje stena:
+        for(int i=0;i<50;i++){
+            model = glm::mat4(1.0f);
+            int x,z;
+            srand(time(NULL));
+            model = glm::translate(model, glm::vec3(randArrayX[i], 0.0f,randArrayY[i]));
+            model = glm::scale(model, glm::vec3(0.4f));
+            model = glm::rotate(model, glm::radians(programState->tempRotation), glm::vec3(0, 1, 0));
+            ourShader.setMat4("model", model);
+            rock.Draw(ourShader);
+        }
+
+
 
         //ravan
 
@@ -534,4 +560,8 @@ unsigned int loadTexture(char const * path)
         stbi_image_free(data);
     }
     return textureID;
+}
+
+int randRange(int low,int high){
+    return rand()%(high-low) + low;
 }
