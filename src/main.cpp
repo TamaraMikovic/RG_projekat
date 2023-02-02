@@ -158,8 +158,21 @@ int main() {
     Model ourModel("resources/objects/backpack/backpack.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
 
-    Model rock("resources/objects/Rock1/Rock1.obj");
+    // model stene
+    Model rock("resources/objects/Rock_6/Rock_6.OBJ");
     rock.SetShaderTextureNamePrefix("material.");
+
+    //model vecih stena
+    Model bigRock("resources/objects/stone/SmallArch_Obj.obj");
+    bigRock.SetShaderTextureNamePrefix("material.");
+
+    //model vanzemaljca
+    Model alien("resources/objects/GrayAlien/10469_GrayAlien_v01.obj");
+    alien.SetShaderTextureNamePrefix("material.");
+
+    //model UFO
+    Model ufo("resources/objects/ufo/Low_poly_UFO.obj");
+    ufo.SetShaderTextureNamePrefix("material.");
 
     //postavljamo vertexe
 
@@ -332,11 +345,11 @@ int main() {
         ourShader.setFloat("svetlo.outerCutOff", glm::cos(glm::radians(15.0f)));
 
         // renderovanje ranca:
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model,programState->tempPosition);
-        model = glm::scale(model, glm::vec3(programState->tempScale));
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        //glm::mat4 model = glm::mat4(1.0f);
+        //model = glm::translate(model,programState->tempPosition);
+        //model = glm::scale(model, glm::vec3(programState->tempScale));
+        //ourShader.setMat4("model", model);
+        //ourModel.Draw(ourShader);
 
         //Renderovanje stena:
         for(int i=0;i<50;i++){
@@ -344,16 +357,40 @@ int main() {
             int x,z;
             srand(time(NULL));
             model = glm::translate(model, glm::vec3(randArrayX[i], 0.0f,randArrayY[i]));
-            model = glm::scale(model, glm::vec3(0.4f));
+            model = glm::scale(model, glm::vec3(0.8f));
             model = glm::rotate(model, glm::radians(programState->tempRotation), glm::vec3(0, 1, 0));
             ourShader.setMat4("model", model);
             rock.Draw(ourShader);
         }
 
+        //Renderovanje vecih stena:
+        for(int i=0;i<50;i+=7){
+            model = glm::mat4(1.0f);
+            int x,z;
+            srand(time(NULL));
+            model = glm::translate(model, glm::vec3(randArrayY[i], 0.0f,randArrayX[i]));
+            model = glm::scale(model, glm::vec3(0.1f));
+            model = glm::rotate(model, glm::radians(programState->tempRotation), glm::vec3(0, 1, 0));
+            ourShader.setMat4("model", model);
+            bigRock.Draw(ourShader);
+        }
 
+        //UFO
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model,glm::vec3(0.0f,5.0f,0.0f));
+        model = glm::scale(model, glm::vec3(0.7f));
+        ourShader.setMat4("model", model);
+        ufo.Draw(ourShader);
+
+        //Vanzemaljac
+        model = glm::mat4(1.0f);
+        model = glm::translate(model,glm::vec3(1.0f,0.0f,1.0f));
+        model = glm::scale(model, glm::vec3(0.05f));
+       // model = glm::rotate(model,glm::radians(programState->tempRotation), glm::vec3(0, 1, 0) );
+        ourShader.setMat4("model", model);
+        alien.Draw(ourShader);
 
         //ravan
-
         glDisable(GL_CULL_FACE);
 
         glActiveTexture(GL_TEXTURE0);
@@ -368,7 +405,8 @@ int main() {
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glEnable(GL_CULL_FACE);
-        
+
+        //skybox
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);
 
