@@ -7,7 +7,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+
 
 #include <learnopengl/filesystem.h>
 #include <learnopengl/shader.h>
@@ -27,11 +27,10 @@ unsigned int loadCubeMap(vector<std::string> faces);
 int randRange(int low,int high);
 void renderQuad();
 void renderCube();
-bool hdr = true;
-bool hdrKey = false;
+
 // settings
-const unsigned int SCR_WIDTH = 1000;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 800;
 
 // camera
 float lastX = SCR_WIDTH / 2.0f;
@@ -57,7 +56,6 @@ struct ProgramState {
 
     void LoadFromFile(std::string filename);
     glm::vec3 tempPosition=glm::vec3(0.0f, 2.0f, 0.0f);
-    float tempScale=1.0f;
     float tempRotation=0.0f;
 };
 void ProgramState::SaveToFile(std::string filename) {
@@ -157,7 +155,7 @@ int main() {
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader gBufferShader("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
     Shader lightingPassShader("resources/shaders/lightingPass.vs","resources/shaders/lightingPass.fs");
-    Shader hdrShader("resources/shader/hdrShader.vs","resources/shader/hdrShader.fs");
+    Shader lightShowShader("resources/shader/lightShow.vs","resources/shader/lightShow.fs");
 
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
@@ -261,6 +259,15 @@ int main() {
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand.jpg").c_str());
     unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/Black.jpg").c_str());
 
+    //load textures
+    vector<std::string> faces{
+            FileSystem::getPath("resources/textures/skybox/badomen_ft.tga"),
+            FileSystem::getPath("resources/textures/skybox/badomen_bk.tga"),
+            FileSystem::getPath("resources/textures/skybox/badomen_up.tga"),
+            FileSystem::getPath("resources/textures/skybox/badomen_dn.tga"),
+            FileSystem::getPath("resources/textures/skybox/badomen_lf.tga"),
+            FileSystem::getPath("resources/textures/skybox/badomen_rt.tga")
+    };
 
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -272,18 +279,9 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)nullptr);
 
-    //load textures
-    vector<std::string> faces{
-        FileSystem::getPath("resources/textures/skybox/badomen_ft.tga"),
-        FileSystem::getPath("resources/textures/skybox/badomen_bk.tga"),
-        FileSystem::getPath("resources/textures/skybox/badomen_up.tga"),
-        FileSystem::getPath("resources/textures/skybox/badomen_dn.tga"),
-        FileSystem::getPath("resources/textures/skybox/badomen_lf.tga"),
-        FileSystem::getPath("resources/textures/skybox/badomen_rt.tga")
-    };
-
     unsigned int cubeMapTexture = loadCubeMap(faces);
 
+    //g buffer
     unsigned int gBuffer;
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -332,12 +330,17 @@ int main() {
     for (unsigned int i = 0; i < br_vanzemaljaca; i++)
     {
         lightPositions.push_back(glm::vec3(-0.35f, 6.55f, i * 12.0f));
-        float rColor = ((rand() % 100) / 200.0f) + 0.1; // between 0.1 and 1.0
-        float gColor = ((rand() % 100) / 200.0f) + 0.1; // between 0.1 and 1.0
-        float bColor = ((rand() % 100) / 200.0f) + 0.1; // between 0.1 and 1.0
+        float rColor = ((rand() % 100) / 200.0f) + 0.1;
+        float gColor = ((rand() % 100) / 200.0f) + 0.1;
+        float bColor = ((rand() % 100) / 200.0f) + 0.1;
         lightColors.push_back(glm::vec3(rColor, gColor, bColor));
     }
 
+
+    lightingPassShader.use();
+    lightingPassShader.setInt("gPosition", 0);
+    lightingPassShader.setInt("gNormal", 1);
+    lightingPassShader.setInt("gAlbedoSpec", 2);
 
     ourShader.use();
     ourShader.setInt("material.texture_diffuse1", 0);
@@ -366,10 +369,95 @@ int main() {
         // render
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+/*
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = programState->camera.GetViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
+        gBufferShader.use();
+        gBufferShader.setMat4("projection", projection);
+        gBufferShader.setMat4("view", view);
 
+        //Vanzemaljci
+        for(int i=0;i<10;i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(randArrayX[i+4], 0.0f, randArrayY[i+2]));
+            model = glm::scale(model, glm::vec3(0.05f));
+            model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+            gBufferShader.setMat4("model", model);
+            alien.Draw(gBufferShader);
+        }
+        glDisable(GL_CULL_FACE);
 
-        // don't forget to enable shader before setting uniforms
-        ourShader.use();
+        model = glm::mat4(1.0f);
+        gBufferShader.setMat4("model", model);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glBindVertexArray(ravanVAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glEnable(GL_CULL_FACE);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        //
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        lightingPassShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        // send light relevant uniforms
+        for (unsigned int i = 0; i < lightPositions.size(); i++) {
+            lightingPassShader.setVec3("lights[" + std::to_string(i) + "].position", lightPositions[i]);
+            lightingPassShader.setVec3("lights[" + std::to_string(i) + "].direction", glm::vec3(0.5f, 0.5f, 0.5f));
+
+            lightingPassShader.setVec3("lights[" + std::to_string(i) + "].color",
+                                       sin((float) glfwGetTime() * lightColors[i]) / 2.0f + 0.5f);
+            lightingPassShader.setVec3("lights[" + std::to_string(i) + "].ambient", glm::vec3(0.01f));
+            lightingPassShader.setVec3("lights[" + std::to_string(i) + "].diffuse", 1.0f, 1.0f, 1.0f);
+            lightingPassShader.setVec3("lights[" + std::to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
+
+            lightingPassShader.setFloat("lights[" + std::to_string(i) + "].constant", 1.0f);
+            lightingPassShader.setFloat("lights[" + std::to_string(i) + "].linear", 0.06f);
+            lightingPassShader.setFloat("lights[" + std::to_string(i) + "].quadratic", 0.032f);
+
+        }
+        lightingPassShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        if(programState->spotlight)
+            lightingPassShader.setVec3("dirLight.ambient", 0.5f, 0.5f, 0.5f);
+        else
+            lightingPassShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
+        lightingPassShader.setVec3("dirLight.diffuse", 0.05f, 0.05f, 0.05);
+        lightingPassShader.setVec3("dirLight.specular", 0.2f, 0.2f, 0.2f);
+        lightingPassShader.setVec3("viewPos", programState->camera.Position);
+        // finally render quad
+        renderQuad();
+
+        // copy content of geometry's depth buffer to default framebuffer's depth buffer
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        lightShowShader.use();
+        lightShowShader.setMat4("projection", projection);
+        lightShowShader.setMat4("view", view);
+        for (unsigned int i = 0; i < lightPositions.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, lightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.35f, 0.1f, 0.30f));
+            lightShowShader.setMat4("model", model);
+            lightShowShader.setVec3("lightColor", lightColors[i]);
+            renderCube();
+        }
+*/
+
+       // don't forget to enable shader before setting uniforms
+       ourShader.use();
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
 
@@ -477,22 +565,6 @@ int main() {
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
-
-        //gBuffer
-        //gBufferShader.use();
-        //gBufferShader.setVec3("viewPosition", programState->camera.Position);
-        //gBufferShader.setFloat("material.shininess", 32.0f);
-
-        // view/projection transformations
-        //projection = glm::perspective(glm::radians(programState->camera.Zoom),(float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        //view = programState->camera.GetViewMatrix();
-        //gBufferShader.setMat4("projection", projection);
-        //gBufferShader.setMat4("view", view);
-
-
-
-
-
 
 
         if (programState->ImGuiEnabled)
