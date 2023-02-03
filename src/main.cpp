@@ -27,7 +27,8 @@ unsigned int loadCubeMap(vector<std::string> faces);
 int randRange(int low,int high);
 void renderQuad();
 void renderCube();
-
+bool hdr = true;
+bool hdrKey = false;
 // settings
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 600;
@@ -154,7 +155,9 @@ int main() {
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader gBuffer("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
+    Shader gBufferShader("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
+    Shader lightingPassShader("resources/shaders/lightingPass.vs","resources/shaders/lightingPass.fs");
+    Shader hdrShader("resources/shader/hdrShader.vs","resources/shader/hdrShader.fs");
 
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
@@ -322,6 +325,19 @@ int main() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
+    const unsigned int br_vanzemaljaca = 10;
+    std::vector<glm::vec3> lightPositions;
+    std::vector<glm::vec3> lightColors;
+    srand(NULL);
+    for (unsigned int i = 0; i < br_vanzemaljaca; i++)
+    {
+        lightPositions.push_back(glm::vec3(-0.35f, 6.55f, i * 12.0f));
+        float rColor = ((rand() % 100) / 200.0f) + 0.1; // between 0.1 and 1.0
+        float gColor = ((rand() % 100) / 200.0f) + 0.1; // between 0.1 and 1.0
+        float bColor = ((rand() % 100) / 200.0f) + 0.1; // between 0.1 and 1.0
+        lightColors.push_back(glm::vec3(rColor, gColor, bColor));
+    }
+
 
     ourShader.use();
     ourShader.setInt("material.texture_diffuse1", 0);
@@ -356,7 +372,6 @@ int main() {
         ourShader.use();
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
-        //skyboxShader.setBool("celShading", true);   //moram da proverim jos sta ovo radi zapravo
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
@@ -388,12 +403,6 @@ int main() {
         ourShader.setFloat("svetlo.cutOff", glm::cos(glm::radians(10.0f)));
         ourShader.setFloat("svetlo.outerCutOff", glm::cos(glm::radians(15.0f)));
 
-        // renderovanje ranca:
-        //glm::mat4 model = glm::mat4(1.0f);
-        //model = glm::translate(model,programState->tempPosition);
-        //model = glm::scale(model, glm::vec3(programState->tempScale));
-        //ourShader.setMat4("model", model);
-        //ourModel.Draw(ourShader);
 
         //Renderovanje stena:
         for(int i=0;i<50;i++){
@@ -401,19 +410,19 @@ int main() {
             int x,z;
             srand(time(NULL));
             model = glm::translate(model, glm::vec3(randArrayX[i], 0.0f,randArrayY[i]));
-            model = glm::scale(model, glm::vec3(0.8f));
+            model = glm::scale(model, glm::vec3(1.0f));
             model = glm::rotate(model, glm::radians(programState->tempRotation), glm::vec3(0, 1, 0));
             ourShader.setMat4("model", model);
             rock.Draw(ourShader);
         }
 
         //Renderovanje vecih stena:
-        for(int i=0;i<50;i+=7){
+        for(int i=0;i<40;i+=7){
             model = glm::mat4(1.0f);
             int x,z;
             srand(time(NULL));
             model = glm::translate(model, glm::vec3(randArrayY[i], 0.0f,randArrayX[i]));
-            model = glm::scale(model, glm::vec3(0.1f));
+            model = glm::scale(model, glm::vec3(0.15f));
             model = glm::rotate(model, glm::radians(programState->tempRotation), glm::vec3(0, 1, 0));
             ourShader.setMat4("model", model);
             bigRock.Draw(ourShader);
@@ -426,7 +435,7 @@ int main() {
         ourShader.setMat4("model", model);
         ufo.Draw(ourShader);
 
-        //Vanzemaljac
+        //Vanzemaljci
         for(int i=0;i<10;i++) {
             model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(randArrayX[i+4], 0.0f, randArrayY[i+2]));
@@ -435,6 +444,7 @@ int main() {
             ourShader.setMat4("model", model);
             alien.Draw(ourShader);
         }
+
         //ravan
         glDisable(GL_CULL_FACE);
 
@@ -445,9 +455,7 @@ int main() {
 
         model = glm::mat4(1.0f);
         ourShader.setMat4("model", model);
-
         glBindVertexArray(ravanVAO);
-
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glEnable(GL_CULL_FACE);
 
@@ -469,6 +477,22 @@ int main() {
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
+
+        //gBuffer
+        //gBufferShader.use();
+        //gBufferShader.setVec3("viewPosition", programState->camera.Position);
+        //gBufferShader.setFloat("material.shininess", 32.0f);
+
+        // view/projection transformations
+        //projection = glm::perspective(glm::radians(programState->camera.Zoom),(float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        //view = programState->camera.GetViewMatrix();
+        //gBufferShader.setMat4("projection", projection);
+        //gBufferShader.setMat4("view", view);
+
+
+
+
+
 
 
         if (programState->ImGuiEnabled)
