@@ -153,10 +153,9 @@ int main() {
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-   // Shader gBufferShader("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
+    Shader gBufferShader("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
     Shader lightingPassShader("resources/shaders/lightingPass.vs","resources/shaders/lightingPass.fs");
-   // Shader lightShowShader("resources/shader/lightShow.vs","resources/shader/lightShow.fs");
-    Shader alienShader("resources/shaders/alien.vs","resources/shaders/alien.fs");
+    Shader lightShowShader("resources/shaders/lightShow.vs","resources/shaders/lightShow.fs");
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
@@ -323,7 +322,7 @@ int main() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-    alienShader.use();
+    lightShowShader.use();
     const unsigned int br_vanzemaljaca = 10;
     std::vector<glm::vec3> lightPositions;
     std::vector<glm::vec3> lightColors;
@@ -369,7 +368,7 @@ int main() {
         // render
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-/*
+
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
@@ -377,16 +376,7 @@ int main() {
         gBufferShader.use();
         gBufferShader.setMat4("projection", projection);
         gBufferShader.setMat4("view", view);
-
-        //Vanzemaljci
-        for(int i=0;i<10;i++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(randArrayX[i+4], 0.0f, randArrayY[i+2]));
-            model = glm::scale(model, glm::vec3(0.05f));
-            model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-            gBufferShader.setMat4("model", model);
-            alien.Draw(gBufferShader);
-        }
+/*
         glDisable(GL_CULL_FACE);
 
         model = glm::mat4(1.0f);
@@ -400,9 +390,11 @@ int main() {
         glEnable(GL_CULL_FACE);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        //
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+     /*   //
         lightingPassShader.use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -443,17 +435,6 @@ int main() {
         glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        lightShowShader.use();
-        lightShowShader.setMat4("projection", projection);
-        lightShowShader.setMat4("view", view);
-        for (unsigned int i = 0; i < lightPositions.size(); i++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, lightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.35f, 0.1f, 0.30f));
-            lightShowShader.setMat4("model", model);
-            lightShowShader.setVec3("lightColor", lightColors[i]);
-            renderCube();
-        }
 */
 
        // don't forget to enable shader before setting uniforms
@@ -462,9 +443,9 @@ int main() {
         ourShader.setFloat("material.shininess", 32.0f);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = programState->camera.GetViewMatrix();
+        //glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
+          //                                      (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        //glm::mat4 view = programState->camera.GetViewMatrix();
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
@@ -498,7 +479,6 @@ int main() {
         ourShader.setFloat("svetlo.cutOff", glm::cos(glm::radians(10.0f)));
         ourShader.setFloat("svetlo.outerCutOff", glm::cos(glm::radians(15.0f)));
 
-
         //Renderovanje stena:
         for(int i=0;i<50;i++){
             model = glm::mat4(1.0f);
@@ -516,7 +496,7 @@ int main() {
             model = glm::mat4(1.0f);
             int x,z;
             srand(time(NULL));
-            model = glm::translate(model, glm::vec3(randArrayY[i], 0.0f,randArrayX[i]));
+            model = glm::translate(model, glm::vec3(randArrayY[i], 0.6f,randArrayX[i]));
             model = glm::scale(model, glm::vec3(0.15f));
             model = glm::rotate(model, glm::radians(programState->tempRotation), glm::vec3(0, 1, 0));
             ourShader.setMat4("model", model);
@@ -524,7 +504,7 @@ int main() {
         }
 
         //UFO
-        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::mat4(1.0f);
         model = glm::translate(model,glm::vec3(0.0f,5.0f,0.0f));
         model = glm::scale(model, glm::vec3(0.7f));
         ourShader.setMat4("model", model);
@@ -547,18 +527,18 @@ int main() {
 
 
         //Vanzemaljci
-        alienShader.use();
+        lightShowShader.use();
         for(int i=0;i<10;i++) {
             model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(randArrayX[i+4], 0.0f, randArrayY[i+2]));
             model = glm::scale(model, glm::vec3(0.05f));
             model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-            alienShader.setMat4("model", model);
-            alienShader.setMat4("projection",projection);
-            alienShader.setMat4("view",view);
-            alienShader.setVec3("lightColor",glm::vec3(0.2f,5.0f,0.2f));
+            lightShowShader.setMat4("model", model);
+            lightShowShader.setMat4("projection",projection);
+            lightShowShader.setMat4("view",view);
+            lightShowShader.setVec3("lightColor",glm::vec3(0.2f,5.0f,0.2f));
             renderCube();
-            alien.Draw(alienShader);
+            alien.Draw(lightShowShader);
         }
 
         //skybox
@@ -608,21 +588,6 @@ int main() {
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
-        if(programState->ambientLight==true)
-            programState->ambientLight= false;
-        else
-            programState->ambientLight = true;
-    }
-
-    if(glfwGetKey(window, GLFW_KEY_K)==GLFW_PRESS){
-        if(programState->spotlight==true)
-            programState->spotlight = false;
-        else
-            programState->spotlight = true;
-    }
-
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -681,7 +646,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_C && action == GLFW_PRESS && programState->ImGuiEnabled) {
         programState->CameraMouseMovementUpdateEnabled = !programState->CameraMouseMovementUpdateEnabled;
-        if(programState->CameraMouseMovementUpdateEnabled == true)
+        if (programState->CameraMouseMovementUpdateEnabled == true)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         else
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -694,6 +659,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         programState->camera.Front = glm::vec3(0.0f, 0.0f, -1.0f);
     }
 
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        programState->ambientLight = !programState->ambientLight;
+    }
 }
 
 void DrawImGui(ProgramState *programState) {
