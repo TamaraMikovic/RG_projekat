@@ -161,12 +161,15 @@ int main() {
     ourModel.SetShaderTextureNamePrefix("material.");
 
     // model stene
-    Model rock("resources/objects/Rock_6/Rock_6.OBJ");
+    Model rock("resources/objects/BigStone/Low_uw.obj");
     rock.SetShaderTextureNamePrefix("material.");
 
     //model vecih stena
     Model bigRock("resources/objects/stone/SmallArch_Obj.obj");
     bigRock.SetShaderTextureNamePrefix("material.");
+    //stene
+    Model Rock6("resources/objects/Rock_5/Rock_5/Rock_5.obj");
+    Rock6.SetShaderTextureNamePrefix("material.");
 
     //model vanzemaljca
     Model alien("resources/objects/GrayAlien/10469_GrayAlien_v01.obj");

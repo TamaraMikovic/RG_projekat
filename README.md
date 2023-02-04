@@ -4,6 +4,8 @@ Projekat napravljen za kurs *Računarska grafika*, na Matematičkom fakultetu u 
 Korišćen je skelet projekta preuzet sa `https://github.com/matf-racunarska-grafika/project_base.git`. <br>
 Pravljeno uz pomoć materijala sa [learnopengl](https://learnopengl.com/). <br>
 <br>
+Implementirane su osnovne oblasti, Cubemaps iz grupe A i Deffered Shading iz grupe B.
+<br> 
 
 
 ## Uputstvo pre izvršavanja
@@ -18,3 +20,5 @@ Pravljeno uz pomoć materijala sa [learnopengl](https://learnopengl.com/). <br>
 - Otvaranje ImGUI meni-ja `F1`
 - Prekid izvršavanja programa `ESC`
 
+# Youtube video :
+https://youtu.be/KqCNuegPYlM 
