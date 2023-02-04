@@ -153,10 +153,10 @@ int main() {
     // build and compile shaders
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader gBufferShader("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
+   // Shader gBufferShader("resources/shaders/gBuffer.vs", "resources/shaders/gBuffer.fs");
     Shader lightingPassShader("resources/shaders/lightingPass.vs","resources/shaders/lightingPass.fs");
-    Shader lightShowShader("resources/shader/lightShow.vs","resources/shader/lightShow.fs");
-
+   // Shader lightShowShader("resources/shader/lightShow.vs","resources/shader/lightShow.fs");
+    Shader alienShader("resources/shaders/alien.vs","resources/shaders/alien.fs");
     // load models
     Model ourModel("resources/objects/backpack/backpack.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
@@ -323,6 +323,7 @@ int main() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
+    alienShader.use();
     const unsigned int br_vanzemaljaca = 10;
     std::vector<glm::vec3> lightPositions;
     std::vector<glm::vec3> lightColors;
@@ -335,7 +336,6 @@ int main() {
         float bColor = ((rand() % 100) / 200.0f) + 0.1;
         lightColors.push_back(glm::vec3(rColor, gColor, bColor));
     }
-
 
     lightingPassShader.use();
     lightingPassShader.setInt("gPosition", 0);
@@ -457,7 +457,7 @@ int main() {
 */
 
        // don't forget to enable shader before setting uniforms
-       ourShader.use();
+        ourShader.use();
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
 
@@ -471,7 +471,7 @@ int main() {
 
         // directional light
         ourShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        if(programState->spotlight)
+        if(programState->ambientLight)
             ourShader.setVec3("dirLight.ambient", 0.5f, 0.5f, 0.5f);
         else
             ourShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
@@ -482,6 +482,13 @@ int main() {
         ourShader.setVec3("svetlo.position", programState->camera.Position);
         ourShader.setVec3("svetlo.direction", programState->camera.Front);
         ourShader.setVec3("svetlo.ambient", 0.0f, 0.0f, 0.0f);
+        if (programState->spotlight) {
+            ourShader.setVec3("svetlo.diffuse", 3.0f, 3.0f, 3.0f);
+            ourShader.setVec3("svetlo.specular", glm::vec3(0.2f));
+        } else {
+            ourShader.setVec3("svetlo.diffuse", 0.0f, 0.0f, 0.0f);
+            ourShader.setVec3("svetlo.specular", 0.0f, 0.0f, 0.0f);
+        }
         ourShader.setVec3("svetlo.diffuse", 0.0f, 0.0f, 0.0f);
         ourShader.setVec3("svetlo.specular", 0.0f, 0.0f, 0.0f);
 
@@ -523,15 +530,6 @@ int main() {
         ourShader.setMat4("model", model);
         ufo.Draw(ourShader);
 
-        //Vanzemaljci
-        for(int i=0;i<10;i++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(randArrayX[i+4], 0.0f, randArrayY[i+2]));
-            model = glm::scale(model, glm::vec3(0.05f));
-            model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-            ourShader.setMat4("model", model);
-            alien.Draw(ourShader);
-        }
 
         //ravan
         glDisable(GL_CULL_FACE);
@@ -546,6 +544,22 @@ int main() {
         glBindVertexArray(ravanVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glEnable(GL_CULL_FACE);
+
+
+        //Vanzemaljci
+        alienShader.use();
+        for(int i=0;i<10;i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(randArrayX[i+4], 0.0f, randArrayY[i+2]));
+            model = glm::scale(model, glm::vec3(0.05f));
+            model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+            alienShader.setMat4("model", model);
+            alienShader.setMat4("projection",projection);
+            alienShader.setMat4("view",view);
+            alienShader.setVec3("lightColor",glm::vec3(0.2f,5.0f,0.2f));
+            renderCube();
+            alien.Draw(alienShader);
+        }
 
         //skybox
         skyboxShader.use();
@@ -596,6 +610,13 @@ void processInput(GLFWwindow *window) {
         glfwSetWindowShouldClose(window, true);
 
     if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+        if(programState->ambientLight==true)
+            programState->ambientLight= false;
+        else
+            programState->ambientLight = true;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_K)==GLFW_PRESS){
         if(programState->spotlight==true)
             programState->spotlight = false;
         else
@@ -658,7 +679,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     }
 
-    // reset the camera to default position
+    if (key == GLFW_KEY_C && action == GLFW_PRESS && programState->ImGuiEnabled) {
+        programState->CameraMouseMovementUpdateEnabled = !programState->CameraMouseMovementUpdateEnabled;
+        if(programState->CameraMouseMovementUpdateEnabled == true)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+
     if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         programState->camera.Position = glm::vec3(0.0f, 0.0f, 3.0f);
         programState->camera.Yaw = 0.0f;
@@ -673,6 +701,31 @@ void DrawImGui(ProgramState *programState) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    if(programState->ImGuiEnabled) {
+        {
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+            ImGui::SetNextWindowSize(ImVec2(600, 130), ImGuiCond_Once);
+            ImGui::Begin("Camera settings:", NULL, ImGuiWindowFlags_NoCollapse);
+            const Camera &c = programState->camera;
+            ImGui::Text("Camera Info:");
+            ImGui::Indent();
+            ImGui::Bullet();
+            ImGui::Text("Camera position: (%f, %f, %f)", c.Position.x, c.Position.y, c.Position.z);
+            ImGui::Bullet();
+            ImGui::Text("(Yaw, Pitch): (%f, %f)", c.Yaw, c.Pitch);
+            ImGui::Bullet();
+            ImGui::Text("Camera front: (%f, %f, %f)", c.Front.x, c.Front.y, c.Front.z);
+            ImGui::End();
+        }
+
+        {
+            static float f = 0.0f;
+            ImGui::Begin("Hello window");
+            ImGui::DragFloat("pointLight.constant", &programState->ambientLight, 0.05, 0.0, 1.0);
+            ImGui::End();
+        }
+
+    }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
