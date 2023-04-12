@@ -181,6 +181,19 @@ int main() {
 
     //postavljamo vertexe
 
+    //kamenje
+    float transparentVertices2[] = {
+
+            0.0f, -0.5f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f,  0.0f,
+            0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,  0.0f,  1.0f,
+            1.0f,  0.5f,0.0f, 0.0f, 0.0f, 1.0f, 1.0f,  1.0f,
+
+            0.0f, -0.5f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f,  0.0f,
+            1.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f,  1.0f,
+            1.0f, -0.5f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f,  0.0f
+    };
+
+
     //ravan
     float ravanVertices[] = {
             100.0f,  0.0f, -100.0f, 0.0f, 1.0f, 0.0f,   100.0f, 100.0f, // top right
@@ -238,6 +251,21 @@ int main() {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f
     };
+    //kamenje VAO
+    unsigned int transparentVAO2, transparentVBO2;
+    glGenVertexArrays(1, &transparentVAO2);
+    glGenBuffers(1, &transparentVBO2);
+    glBindVertexArray(transparentVAO2);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO2);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices2), transparentVertices2, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glBindVertexArray(0);
+
     //ravan VAO
     unsigned int ravanVBO, ravanVAO, ravanEBO;
     glGenVertexArrays(1, &ravanVAO);
@@ -258,9 +286,22 @@ int main() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+
+    vector<glm::vec3> stone
+            {
+                    glm::vec3(-1.5f, 0.5f, -0.48f),
+                    glm::vec3( 1.5f, 0.5f, 0.51f),
+                    glm::vec3( 0.0f, 0.5f, 0.7f),
+                    glm::vec3(-0.7f, 0.5f, -2.3f),
+                    glm::vec3 (1.0f, 0.5f, -1.2f),
+                    glm::vec3 (-0.1f, 0.5f, -0.63f),
+                    glm::vec3 (-1.75f, 0.5f, 1.0f),
+                    glm::vec3 (-0.6f, 0.5f, -2.0f)
+            };
+
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand.jpg").c_str());
     unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/Black.jpg").c_str());
-
+    unsigned int stoneTexture = loadTexture(FileSystem::getPath("resources/textures/ss.png").c_str());
     //load textures
     vector<std::string> faces{
             FileSystem::getPath("resources/textures/skybox/badomen_ft.tga"),
@@ -513,6 +554,22 @@ int main() {
         ourShader.setMat4("model", model);
         ufo.Draw(ourShader);
 
+        //kamenje
+        glDisable(GL_CULL_FACE);
+        glBindVertexArray(transparentVAO2);
+        glBindTexture(GL_TEXTURE_2D, stoneTexture);
+        model = glm::mat4(1.0f);
+        for (unsigned int i = 0; i < stone.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, stone[i]);
+            //model = glm::rotate(model, (float)i*60.0f, glm::vec3(0.0, 0.1, 0.0));
+            ourShader.setMat4("model", model);
+            ourShader.setMat4("projection", projection);
+            ourShader.setMat4("view", view);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
 
         //ravan
         glDisable(GL_CULL_FACE);
@@ -527,6 +584,7 @@ int main() {
         glBindVertexArray(ravanVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glEnable(GL_CULL_FACE);
+
 
 
         //Vanzemaljci
