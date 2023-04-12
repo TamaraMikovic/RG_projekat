@@ -128,6 +128,7 @@ int main() {
 
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+
     //Face culling
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -304,12 +305,13 @@ int main() {
     unsigned int stoneTexture = loadTexture(FileSystem::getPath("resources/textures/ss.png").c_str());
     //load textures
     vector<std::string> faces{
-            FileSystem::getPath("resources/textures/skybox/badomen_ft.tga"),
-            FileSystem::getPath("resources/textures/skybox/badomen_bk.tga"),
-            FileSystem::getPath("resources/textures/skybox/badomen_up.tga"),
-            FileSystem::getPath("resources/textures/skybox/badomen_dn.tga"),
-            FileSystem::getPath("resources/textures/skybox/badomen_lf.tga"),
-            FileSystem::getPath("resources/textures/skybox/badomen_rt.tga")
+            FileSystem::getPath("resources/textures/skybox/badomen_rt.png"),
+            FileSystem::getPath("resources/textures/skybox/badomen_lf.png"),
+            FileSystem::getPath("resources/textures/skybox/badomen_up.png"),
+            FileSystem::getPath("resources/textures/skybox/badomen_dn.png"),
+            FileSystem::getPath("resources/textures/skybox/badomen_ft.png"),
+            FileSystem::getPath("resources/textures/skybox/badomen_bk.png")
+
     };
 
     // skybox VAO
@@ -548,6 +550,7 @@ int main() {
         }
 
         //UFO
+
         model = glm::mat4(1.0f);
         model = glm::translate(model,glm::vec3(0.0f,5.0f,0.0f));
         model = glm::scale(model, glm::vec3(0.7f));
