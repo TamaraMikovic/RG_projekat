@@ -58,6 +58,7 @@ struct ProgramState {
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
     bool spotlight = true;
+    bool plight=true;
     PointLight pointLight;
     float ambientLight = 0.0f;
 
@@ -193,7 +194,8 @@ int main() {
     ufo.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
+    //Pozicija UFO-a
+    pointLight.position = glm::vec3(0.0f, 0.0, 0.0);
     pointLight.ambient = glm::vec3(0.1, 0.1, 0.1);
     pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
@@ -348,6 +350,7 @@ int main() {
 
     unsigned int cubeMapTexture = loadCubeMap(faces);
 
+
     //g buffer
     unsigned int gBuffer;
     glGenFramebuffers(1, &gBuffer);
@@ -434,17 +437,18 @@ int main() {
         processInput(window);
 
         // render
-        glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
-        gBufferShader.use();
+        /*gBufferShader.use();
         gBufferShader.setMat4("projection", projection);
         gBufferShader.setMat4("view", view);
-/*
+
         glDisable(GL_CULL_FACE);
 
         model = glm::mat4(1.0f);
@@ -460,9 +464,6 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
-     /*   //
         lightingPassShader.use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -471,6 +472,7 @@ int main() {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
         // send light relevant uniforms
+        /*
         for (unsigned int i = 0; i < lightPositions.size(); i++) {
             lightingPassShader.setVec3("lights[" + std::to_string(i) + "].position", lightPositions[i]);
             lightingPassShader.setVec3("lights[" + std::to_string(i) + "].direction", glm::vec3(0.5f, 0.5f, 0.5f));
@@ -496,15 +498,15 @@ int main() {
         lightingPassShader.setVec3("viewPos", programState->camera.Position);
         // finally render quad
         renderQuad();
-
+/*
         // copy content of geometry's depth buffer to default framebuffer's depth buffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-*/
 
+*/
        // don't forget to enable shader before setting uniforms
         ourShader.use();
         ourShader.setVec3("viewPosition", programState->camera.Position);
@@ -527,25 +529,37 @@ int main() {
         ourShader.setVec3("dirLight.diffuse", 0.05f, 0.05f, 0.05);
         ourShader.setVec3("dirLight.specular", 0.2f, 0.2f, 0.2f);
 
+        ourShader.setVec3("pointLight.position", lightPos);
+        if(programState->plight){
+            ourShader.setVec3("pointLight.ambient", glm::vec3(1.0f));
+            ourShader.setVec3("pointLight.diffuse", 0.1f, 0.1f, 0.1);
+            ourShader.setVec3("pointLight.specular", 0.5f, 0.5f, 0.5f);
+        }
+        else{
+            ourShader.setVec3("pointLight.ambient", glm::vec3(0.0f));
+            ourShader.setVec3("pointLight.diffuse", 0.0f, 0.0f, 0.0f);
+            ourShader.setVec3("pointLight.specular", 0.0f, 0.0f, 0.0f);
+        }
+        ourShader.setFloat("pointLight.constant", 1.0f);
+        ourShader.setFloat("pointLight.linear", 0.09f);
+        ourShader.setFloat("pointLight.quadratic", 0.032f);
+
 
         ourShader.setVec3("svetlo.position", programState->camera.Position);
         ourShader.setVec3("svetlo.direction", programState->camera.Front);
         ourShader.setVec3("svetlo.ambient", 0.0f, 0.0f, 0.0f);
         if (programState->spotlight) {
-            ourShader.setVec3("svetlo.diffuse", 3.0f, 3.0f, 3.0f);
-            ourShader.setVec3("svetlo.specular", glm::vec3(0.2f));
+            ourShader.setVec3("svetlo.diffuse", 1.0f, 1.0f, 1.0f);
+            ourShader.setVec3("svetlo.specular", glm::vec3(0.5f));
         } else {
             ourShader.setVec3("svetlo.diffuse", 0.0f, 0.0f, 0.0f);
             ourShader.setVec3("svetlo.specular", 0.0f, 0.0f, 0.0f);
         }
-        ourShader.setVec3("svetlo.diffuse", 0.0f, 0.0f, 0.0f);
-        ourShader.setVec3("svetlo.specular", 0.0f, 0.0f, 0.0f);
-
-        ourShader.setFloat("svetlo.constant", 1.0f);
-        ourShader.setFloat("svetlo.linear", 0.09f);
+        ourShader.setFloat("svetlo.constant", 0.6f);
+        ourShader.setFloat("svetlo.linear", 0.9f);
         ourShader.setFloat("svetlo.quadratic", 0.032f);
-        ourShader.setFloat("svetlo.cutOff", glm::cos(glm::radians(10.0f)));
-        ourShader.setFloat("svetlo.outerCutOff", glm::cos(glm::radians(15.0f)));
+        ourShader.setFloat("svetlo.cutOff", glm::cos(glm::radians(15.0f)));
+        ourShader.setFloat("svetlo.outerCutOff", glm::cos(glm::radians(30.0f)));
 
         //Renderovanje stena:
         for(int i=0;i<50;i++){
@@ -674,6 +688,8 @@ int main() {
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    //if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS)
+      //  programState->spotlight=!programState->spotlight;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -748,6 +764,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
         programState->ambientLight = !programState->ambientLight;
     }
+    if(glfwGetKey(window, GLFW_KEY_K)==GLFW_PRESS){
+        programState->spotlight = !programState->spotlight;
+    }
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+        programState->plight = !programState->plight;
+    }
+
+
 }
 
 void DrawImGui(ProgramState *programState) {
