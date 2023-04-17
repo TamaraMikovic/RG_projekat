@@ -17,8 +17,13 @@ Implementirane su osnovne oblasti, Cubemaps iz grupe A i Deffered Shading iz gru
 
 ## Uputstvo tokom izvršavanja
 - Kretanje je standardno pomocu `WASD`
+- PointLight se ukljucuje i iskljucuje pomocu `O`
+- SpotLight se ukljucuje i iskljucuje pomocu `K`
+- AmbientLight se ukljucuje i iskljucuje pomocu `L`
 - Otvaranje ImGUI meni-ja `F1`
 - Prekid izvršavanja programa `ESC`
 
 # Youtube video :
 https://youtu.be/KqCNuegPYlM 
+- Link ka videu nakon izmena
+https://youtu.be/FVtdGBJzcj8
